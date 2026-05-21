@@ -42,10 +42,11 @@
                 </div>
             </div>
             <div class="w-full lg:max-w-xl">
-                <div class="search-shell">
-                    <span class="search-icon">✦</span>
-                    <input type="text" id="globalSearch" placeholder="Search tools, e.g. JSON, JWT, Cron, SEO, CSV..." autocomplete="off">
-                </div>
+                <form class="search-shell" id="searchForm" role="search" action="/" method="get">
+                    <span class="search-icon" aria-hidden="true">🔍</span>
+                    <input type="search" name="q" id="globalSearch" placeholder="Search tools: JSON, JWT, Cron, SEO, PDF…" autocomplete="off" enterkeyhint="search">
+                    <button type="submit" class="search-btn" id="searchBtn" aria-label="Search tools">Search</button>
+                </form>
             </div>
         </div>
     </nav>
@@ -824,23 +825,27 @@
                 const imgAlt = tool.cardImageAlt || `${tool.name} — AIHH.ai free online tool`;
                 const linkTitle = tool.linkTitle || `Open ${tool.name}`;
                 const anchorLabel = tool.anchorLabel || tool.name;
+                const glyph = escapeHtml(tool.iconGlyph || '⚙');
                 return `
                 <article class="tool-card" itemscope itemtype="https://schema.org/WebApplication" role="listitem">
                     <meta itemprop="applicationCategory" content="${escapeHtml(tool.applicationCategory || tool.catName)}">
                     <link itemprop="url" href="${escapeHtml(schemaUrl)}">
                     <a href="${href}" class="tool-card-hit" title="${escapeHtml(linkTitle)}" aria-label="${escapeHtml(anchorLabel)}">
                         <figure class="tool-card-figure">
-                            <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(imgAlt)}" width="64" height="64" loading="lazy" decoding="async" itemprop="image">
+                            <span class="tool-card-glyph" aria-hidden="true">${glyph}</span>
+                            <img src="${escapeHtml(imgSrc)}" alt="" width="80" height="80" loading="lazy" decoding="async" itemprop="image" class="tool-card-img" onerror="this.classList.add('is-hidden')">
                         </figure>
-                        <div class="tool-card-top">
-                            <span class="tool-cat">${escapeHtml(tool.catName)}</span>
-                            <span class="tool-id">${escapeHtml(tool.id)}</span>
+                        <div class="tool-card-body">
+                            <div class="tool-card-top">
+                                <span class="tool-cat">${escapeHtml(tool.catName)}</span>
+                                <span class="tool-id">${escapeHtml(tool.id.replace(/^tool/, '#'))}</span>
+                            </div>
+                            <h3 class="tool-card-title" itemprop="name">${escapeHtml(tool.name)}</h3>
                         </div>
-                        <h3 class="tool-card-title" itemprop="name">${escapeHtml(tool.name)}</h3>
                     </a>
                     <p class="tool-card-desc" itemprop="description">${escapeHtml(tool.desc)}</p>
                     ${renderKeywordChips(tool)}
-                    <a href="${href}" class="tool-card-link" title="${escapeHtml(linkTitle)}">${escapeHtml(anchorLabel)} →</a>
+                    <a href="${href}" class="tool-card-link" title="${escapeHtml(linkTitle)}">Open tool →</a>
                 </article>`;
             }).join('');
             noRes.classList.toggle('hidden', total > 0);
@@ -1057,10 +1062,24 @@
             }
         }
 
-        document.getElementById('globalSearch').addEventListener('input', (e) => {
-            state.query = e.target.value;
+        function applySearchQuery(q) {
+            state.query = q;
             state.page = 1;
             updateView();
+        }
+
+        document.getElementById('globalSearch').addEventListener('input', (e) => {
+            applySearchQuery(e.target.value);
+        });
+
+        document.getElementById('searchForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const q = document.getElementById('globalSearch').value.trim();
+            applySearchQuery(q);
+            const url = new URL(location.href);
+            if (q) url.searchParams.set('q', q);
+            else url.searchParams.delete('q');
+            history.replaceState(null, '', url.pathname + url.search + url.hash);
         });
 
         document.getElementById('mainCats').addEventListener('click', (e) => {
