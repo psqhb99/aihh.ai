@@ -452,10 +452,29 @@ a {
 
 .site-hero .hero-lead {
     margin: 0.85rem 0 0;
-    max-width: 42rem;
-    font-size: 1rem;
-    line-height: 1.65;
-    color: #94a3b8;
+    max-width: 46rem;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: #cbd5e1;
+}
+
+.hero-benefits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.1rem;
+}
+
+.hero-benefit-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    background: rgba(30, 41, 59, 0.75);
+    border: 1px solid rgba(103, 232, 249, 0.22);
 }
 
 .site-stat {

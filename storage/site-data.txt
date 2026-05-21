@@ -3503,47 +3503,55 @@
   ],
   "seo": {
     "siteName": "AIHH.ai",
-    "pageTitle": "AIHH.ai | 500 Free Online Tools — Dev, SEO & Productivity",
-    "metaDescription": "Browse 500 free browser-based tools on AIHH.ai: JSON, JWT, Cron, SEO, PDF, image, CSV, privacy helpers, and more. No upload, no signup.",
-    "metaKeywords": "AIHH.ai,online tools,json formatter,jwt decoder,seo tools,free web utilities,pdf tools,image tools",
+    "pageTitle": "AIHH.ai | 免费在线工具 — JSON、SEO、PDF、开发、办公",
+    "metaDescription": "AIHH.ai 免费在线工具箱：JSON、SEO、PDF、图片、开发、办公与隐私工具，浏览器内即用，免注册、免安装，粘贴即得结果。",
+    "metaKeywords": "AIHH.ai,免费在线工具,JSON格式化,SEO工具,PDF工具,图片转换,开发者工具,免注册",
     "ogImage": "https://aihh.ai/assets/hub/og/aihh-tool-directory-500-tools.svg",
-    "ogImageAlt": "AIHH.ai directory — 500 free online tools with SEO-friendly pages",
-    "heroBadge": "500 Tools · Client-side · SEO-ready",
-    "heroTitle": "Find the right tool in seconds",
-    "heroHighlight": "500 free utilities for Google traffic",
-    "heroDescription": "Each tool lives on its own subdomain with named preview images, unique titles, FAQs, and schema markup—this directory links them all for crawlers and users.",
+    "ogImageAlt": "AIHH.ai — 免费在线工具箱，工作与生活常用工具一站搞定",
+    "navPill": "免费工具箱",
+    "heroBadge": "永久免费 · 免注册 · 浏览器本地运行",
+    "heroTitle": "免费在线工具箱",
+    "heroHighlight": "打开即用，专注干活",
+    "heroDescription": "不用再在一堆网站里翻来翻去。AIHH.ai 把 JSON、SEO、PDF、图片、表格和隐私相关工具收进一处：点开页面、粘贴内容、复制结果。能本地算就在本地算，数据留在你这边；日常用法不收钱、不装软件、不建账号。我们会持续上新，朝万级免费工具网迈进——学的是日活百万级免费工具站：快、清楚、真能跑。",
     "heroTags": [
-      "No upload",
-      "SEO-friendly",
-      "Original code",
-      "Subdomain deploy"
+      "秒出结果",
+      "完全免费",
+      "本地处理更安心",
+      "免注册",
+      "开发 · SEO · 办公",
+      "持续上新"
     ],
-    "matrixDescription": "Development, SEO, office work, content, design, privacy, and productivity—organized by category.",
-    "mainCategoryTitle": "Browse by category",
-    "mainCategoryDesc": "Pick a workflow, then narrow down with subcategories.",
-    "subCategoryTitle": "Subcategories",
-    "subCategoryAllDesc": "All subcategories across the matrix.",
-    "subCategoryFilteredDesc": "Subcategories for the selected main category.",
-    "resultPanelEyebrow": "Live Result",
-    "resultPanelTitle": "Matching tools",
-    "resultPanelTemplate": "{count} tools match your filters.",
-    "recommendedEyebrow": "Recommended",
-    "recommendedTitle": "Popular tools",
-    "recommendedDesc": "High-intent utilities for developers and SEO workflows.",
-    "emptyText": "No matches. Try another category or a broader keyword.",
-    "footerText": "© 2026 AIHH.ai · Each tool: tool00001.aihh.ai … tool00500.aihh.ai · Terms & Privacy in /legal/",
+    "siteStatLine": "搜索或按分类浏览，一点即开",
+    "matrixDescription": "开发、SEO、办公、内容、设计、隐私与效率工具，按分类整理。",
+    "mainCategoryTitle": "按分类浏览",
+    "mainCategoryDesc": "先选场景，再用子分类或搜索缩小范围。",
+    "subCategoryTitle": "子分类",
+    "subCategoryAllDesc": "显示全部分类下的子类。",
+    "subCategoryFilteredDesc": "当前主分类下的子类。",
+    "resultPanelEyebrow": "筛选结果",
+    "resultPanelTitle": "匹配的工具",
+    "resultPanelTemplate": "当前筛选匹配 {count} 个工具",
+    "recommendedEyebrow": "推荐",
+    "recommendedTitle": "常用工具",
+    "recommendedDesc": "开发与 SEO 场景里用得最多的入口。",
+    "emptyText": "没有匹配项，换个分类或更宽的关键词试试。",
+    "footerText": "© 2026 AIHH.ai · 免费在线工具箱 · 条款与隐私见 /legal/",
     "articleSections": [
       {
-        "title": "Why 100 focused tools first?",
-        "content": "A tool network wins when every page solves one clear job. AIHH.ai ships 100 working utilities with shared quality bars—then scales to thousands of subdomains."
+        "title": "为什么大家会收藏 AIHH.ai",
+        "content": "高流量工具站的共性很简单：一个搜索框、分类一眼就懂、功能第一次就能用。我们按这个标准做——少找得多干。"
       },
       {
-        "title": "Built for users and Google",
-        "content": "Each page includes runnable features, FAQs, privacy notes, canonical URLs, sitemaps, JSON-LD, and links back to this directory so crawlers and humans can navigate easily."
+        "title": "在这里能做什么",
+        "content": "开发同学格式化 JSON、排查接口；运营检查标题、生成 UTM；设计缩放图片、取色；办公清洗 CSV 和 PDF；学生换算单位、润色文案——都不用注册。"
       },
       {
-        "title": "SEO-friendly tool cards and images",
-        "content": "Every listing uses a descriptive filename (e.g. tool00001-json-formatter.svg), unique alt text, keyword chips, Schema.org WebApplication markup, and an ItemList so search engines understand the full matrix."
+        "title": "对你免费，为规模化而搭",
+        "content": "核心工具个人与商用都免费。目录持续扩充，目标是万级免费实用页——体验对齐你已经习惯的大站：快加载、功能实在、不搞套路。"
+      },
+      {
+        "title": "隐私优先",
+        "content": "能在浏览器完成的就不上传。草稿、客户资料、一次性小修不会落到别人服务器上，用起来也更像「即时完成」。"
       }
     ]
   },
