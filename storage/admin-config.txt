@@ -1,0 +1,7 @@
+{
+  "adminPath": "/admin-3110a6eb98ad-portal-1b3a2ba3",
+  "username": "admin",
+  "passwordSalt": "5b609baba94fa535306d249e4250852d",
+  "passwordHash": "363a086111dfc1f519cb819cea3c2c3a76a2f527da1501f0b5a903ba4f478fb3c0f83b790913fafaf72024f1e589d1b2b7e6d1f7cb48b6c00afccb2f3170cf5f",
+  "updatedAt": "2026-05-07T05:24:19.281Z"
+}
