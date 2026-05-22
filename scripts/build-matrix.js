@@ -10,7 +10,12 @@ const {
   buildDirectoryOgSvg,
   buildHubCardFields
 } = require('./hub-seo');
-const NAV_URL = `https://${DOMAIN}/`;
+const {
+  NAV_URL,
+  buildHubFaqs,
+  buildHubJsonGraph,
+  patchHubHtmlBlocks
+} = require('./hub-seo-build');
 let tools = buildToolsList();
 
 function buildToolFaqs(tool) {
@@ -30,21 +35,34 @@ function buildFaqHtml(faqs) {
 function buildToolJsonLd(tool, hub) {
   const url = `https://${tool.domain}/`;
   const faqs = buildToolFaqs(tool);
+  const catAnchor = `${NAV_URL}#discover`;
   return {
     '@context': 'https://schema.org',
     '@graph': [
       {
+        '@type': 'WebPage',
+        '@id': `${url}#webpage`,
+        url,
+        name: tool.title,
+        description: tool.description,
+        inLanguage: 'en',
+        isPartOf: { '@id': `${NAV_URL}#website` }
+      },
+      {
         '@type': 'WebApplication',
+        '@id': `${url}#app`,
         name: tool.name,
         url,
         image: hub.cardImageUrl,
         description: tool.description,
         applicationCategory: tool.category,
         operatingSystem: 'Any',
+        browserRequirements: 'Requires JavaScript',
         offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }
       },
       {
         '@type': 'FAQPage',
+        '@id': `${url}#faq`,
         mainEntity: faqs.map((f) => ({
           '@type': 'Question',
           name: f.q,
@@ -53,9 +71,10 @@ function buildToolJsonLd(tool, hub) {
       },
       {
         '@type': 'BreadcrumbList',
+        '@id': `${url}#breadcrumb`,
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'AIHH.ai', item: NAV_URL },
-          { '@type': 'ListItem', position: 2, name: tool.category, item: `${NAV_URL}#discover` },
+          { '@type': 'ListItem', position: 2, name: tool.category, item: catAnchor },
           { '@type': 'ListItem', position: 3, name: tool.name, item: url }
         ]
       }
@@ -63,70 +82,10 @@ function buildToolJsonLd(tool, hub) {
   };
 }
 
-function buildHubJsonGraph(siteBundle) {
-  const seo = siteBundle.seo;
-  return {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'WebSite',
-        '@id': `${NAV_URL}#website`,
-        name: seo.siteName || 'AIHH.ai',
-        url: NAV_URL,
-        description: seo.metaDescription,
-        inLanguage: 'zh-CN',
-        image: seo.ogImage,
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: `${NAV_URL}?q={search_term_string}`,
-          'query-input': 'required name=search_term_string'
-        }
-      },
-      {
-        '@type': 'ItemList',
-        '@id': `${NAV_URL}#toollist`,
-        name: 'AIHH.ai 免费在线工具',
-        numberOfItems: siteBundle.hubItemList.length,
-        itemListElement: siteBundle.hubItemList
-      }
-    ]
-  };
-}
-
-function buildHubCrawlSection(toolList) {
-  const byCat = new Map();
-  toolList.forEach((tool) => {
-    if (!byCat.has(tool.category)) byCat.set(tool.category, []);
-    byCat.get(tool.category).push(tool);
-  });
-  let html = `<section id="tool-directory-crawl" class="crawl-directory" aria-label="Complete tool directory">\n`;
-  html += `<h2>免费在线工具目录</h2>\n<p>按分类浏览。每个工具独立页面，在浏览器中即可使用。</p>\n`;
-  for (const [cat, items] of byCat.entries()) {
-    html += `<h3>${escapeHtml(cat)}</h3>\n<ul>\n`;
-    items.forEach((tool) => {
-      const blurb = (tool.description || '').slice(0, 120);
-      html += `<li><a href="https://${tool.domain}/">${escapeHtml(tool.name)}</a> — ${escapeHtml(tool.keywords[0] || tool.name)}${blurb ? `. ${escapeHtml(blurb)}` : ''}</li>\n`;
-    });
-    html += '</ul>\n';
-  }
-  html += '</section>';
-  return html;
-}
-
 async function patchHubIndex(siteBundle) {
   const indexPath = path.join(ROOT, 'index.html');
   let html = await fs.readFile(indexPath, 'utf8');
-  const graph = buildHubJsonGraph(siteBundle);
-  html = html.replace(
-    /<script type="application\/ld\+json" id="siteJsonLd">[\s\S]*?<\/script>/,
-    `<script type="application/ld+json" id="siteJsonLd">${JSON.stringify(graph)}</script>`
-  );
-  const crawl = buildHubCrawlSection(tools);
-  if (html.includes('<!-- CRAWL_LINKS_START -->')) {
-    html = html.replace(/<!-- CRAWL_LINKS_START -->[\s\S]*?<!-- CRAWL_LINKS_END -->/, `<!-- CRAWL_LINKS_START -->\n${crawl}\n<!-- CRAWL_LINKS_END -->`);
-  } else {
-    html = html.replace('</footer>', `${crawl}\n</footer>`);
-  }
+  html = patchHubHtmlBlocks(html, siteBundle, tools);
   await write(indexPath, html);
 }
 
@@ -159,8 +118,13 @@ function buildToolHtml(tool, related) {
   <title>${escapeHtml(tool.title)}</title>
   <meta name="description" content="${escapeHtml(tool.description)}">
   <meta name="keywords" content="${escapeHtml(tool.keywords.join(','))}">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="author" content="AIHH.ai">
   <link rel="canonical" href="${url}">
+  <link rel="sitemap" type="application/xml" href="${url}sitemap.xml">
   <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:site_name" content="AIHH.ai">
   <meta property="og:title" content="${escapeHtml(tool.title)}">
   <meta property="og:description" content="${escapeHtml(tool.description)}">
   <meta property="og:url" content="${url}">
@@ -179,8 +143,11 @@ function buildToolHtml(tool, related) {
 <body>
   <header class="site-header">
     <a class="brand" href="${NAV_URL}">AIHH.ai</a>
-    <nav><a href="${NAV_URL}">All tools</a><a href="#faq">FAQ</a></nav>
+    <nav><a href="${NAV_URL}">All tools</a><a href="${NAV_URL}#tool-directory-crawl">Directory</a><a href="#faq">FAQ</a></nav>
   </header>
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="${NAV_URL}">AIHH.ai</a> › <a href="${NAV_URL}#discover">${escapeHtml(tool.category)}</a> › <span>${escapeHtml(tool.name)}</span>
+  </nav>
   <main>
     <section class="hero">
       <p class="eyebrow">${escapeHtml(tool.id)} · ${escapeHtml(tool.category)} / ${escapeHtml(tool.subcategory)}</p>
@@ -254,7 +221,7 @@ function buildToolJs() {
 }
 
 function buildCss() {
-  return `:root{color-scheme:dark;--bg:#071012;--panel:#102022;--ink:#eef7f2;--muted:#9bb1aa;--line:#254144;--brand:#64f4c4;--accent:#ffd166;--bad:#ff8a8a}*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:radial-gradient(circle at top left,#17362f,#071012 38%),var(--bg);color:var(--ink)}a{color:inherit}.site-header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 5vw;background:rgba(7,16,18,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}.brand{font-weight:900;color:var(--brand);text-decoration:none;letter-spacing:.02em}nav{display:flex;gap:14px;color:var(--muted);font-size:14px}main{width:min(1120px,92vw);margin:0 auto}.hero{padding:58px 0 30px}.eyebrow{color:var(--brand);font-size:13px;text-transform:uppercase;letter-spacing:.08em}.hero h1{font-size:clamp(34px,6vw,68px);line-height:1.02;margin:12px 0 18px;letter-spacing:0}.lead{max-width:760px;color:#c8d8d3;font-size:18px;line-height:1.8}.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.chips span,.related a{border:1px solid var(--line);background:rgba(16,32,34,.72);border-radius:999px;padding:8px 12px;color:#cde9df;text-decoration:none}.tool-panel,.content-grid article,.faq,.related{background:rgba(16,32,34,.86);border:1px solid var(--line);border-radius:8px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.22)}.panel-head{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}.panel-head h2{margin:0}.actions{display:flex;gap:10px;flex-wrap:wrap}button{border:0;background:var(--brand);color:#06201a;padding:10px 14px;border-radius:6px;font-weight:800;cursor:pointer}button:nth-child(3),button:nth-child(4){background:#21383a;color:var(--ink);border:1px solid var(--line)}label{display:block;margin:16px 0 8px;color:#d8ede6;font-weight:700}textarea{width:100%;min-height:190px;resize:vertical;background:#061012;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:14px;font:14px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}#outputText{min-height:210px}.status{color:var(--brand);min-height:24px}.status.bad{color:var(--bad)}.content-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:22px 0}.content-grid h2,.faq h2,.related h2{margin-top:0}.content-grid p,.content-grid li,.faq p{color:#c8d8d3;line-height:1.75}.faq details{border-top:1px solid var(--line);padding:14px 0}.faq summary{cursor:pointer;font-weight:800}.examples{margin:22px 0;background:rgba(16,32,34,.86);border:1px solid var(--line);border-radius:8px;padding:22px}.examples h2{margin-top:0}.example-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:760px){.example-grid{grid-template-columns:1fr}}.example-pre{background:#061012;border:1px solid var(--line);border-radius:6px;padding:12px;font:13px/1.5 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;color:#cde9df;max-height:220px;overflow:auto}.examples h3{font-size:14px;color:var(--brand);margin:0 0 8px}.related{margin:22px 0 48px}.related div{display:flex;gap:10px;flex-wrap:wrap}.disclaimer{margin:0 0 18px;padding:16px 20px;border:1px solid var(--line);border-radius:8px;background:rgba(255,209,102,.08);color:#e8dcc0;font-size:14px;line-height:1.6}footer{padding:34px 5vw;color:var(--muted);text-align:center;border-top:1px solid var(--line)}footer a{color:var(--brand)}@media(max-width:760px){.content-grid{grid-template-columns:1fr}.site-header{align-items:flex-start;flex-direction:column}.hero{padding-top:34px}.actions{width:100%}button{flex:1 1 130px}}`;
+  return `:root{color-scheme:dark;--bg:#071012;--panel:#102022;--ink:#eef7f2;--muted:#9bb1aa;--line:#254144;--brand:#64f4c4;--accent:#ffd166;--bad:#ff8a8a}*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:radial-gradient(circle at top left,#17362f,#071012 38%),var(--bg);color:var(--ink)}a{color:inherit}.site-header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 5vw;background:rgba(7,16,18,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}.brand{font-weight:900;color:var(--brand);text-decoration:none;letter-spacing:.02em}nav{display:flex;gap:14px;color:var(--muted);font-size:14px;flex-wrap:wrap}.breadcrumb{width:min(1120px,92vw);margin:12px auto 0;padding:0 5vw;font-size:13px;color:var(--muted)}.breadcrumb a{color:var(--brand);text-decoration:none}.breadcrumb a:hover{text-decoration:underline}.breadcrumb span{color:var(--ink)}main{width:min(1120px,92vw);margin:0 auto}.hero{padding:58px 0 30px}.eyebrow{color:var(--brand);font-size:13px;text-transform:uppercase;letter-spacing:.08em}.hero h1{font-size:clamp(34px,6vw,68px);line-height:1.02;margin:12px 0 18px;letter-spacing:0}.lead{max-width:760px;color:#c8d8d3;font-size:18px;line-height:1.8}.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.chips span,.related a{border:1px solid var(--line);background:rgba(16,32,34,.72);border-radius:999px;padding:8px 12px;color:#cde9df;text-decoration:none}.tool-panel,.content-grid article,.faq,.related{background:rgba(16,32,34,.86);border:1px solid var(--line);border-radius:8px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.22)}.panel-head{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}.panel-head h2{margin:0}.actions{display:flex;gap:10px;flex-wrap:wrap}button{border:0;background:var(--brand);color:#06201a;padding:10px 14px;border-radius:6px;font-weight:800;cursor:pointer}button:nth-child(3),button:nth-child(4){background:#21383a;color:var(--ink);border:1px solid var(--line)}label{display:block;margin:16px 0 8px;color:#d8ede6;font-weight:700}textarea{width:100%;min-height:190px;resize:vertical;background:#061012;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:14px;font:14px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}#outputText{min-height:210px}.status{color:var(--brand);min-height:24px}.status.bad{color:var(--bad)}.content-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:22px 0}.content-grid h2,.faq h2,.related h2{margin-top:0}.content-grid p,.content-grid li,.faq p{color:#c8d8d3;line-height:1.75}.faq details{border-top:1px solid var(--line);padding:14px 0}.faq summary{cursor:pointer;font-weight:800}.examples{margin:22px 0;background:rgba(16,32,34,.86);border:1px solid var(--line);border-radius:8px;padding:22px}.examples h2{margin-top:0}.example-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:760px){.example-grid{grid-template-columns:1fr}}.example-pre{background:#061012;border:1px solid var(--line);border-radius:6px;padding:12px;font:13px/1.5 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;color:#cde9df;max-height:220px;overflow:auto}.examples h3{font-size:14px;color:var(--brand);margin:0 0 8px}.related{margin:22px 0 48px}.related div{display:flex;gap:10px;flex-wrap:wrap}.disclaimer{margin:0 0 18px;padding:16px 20px;border:1px solid var(--line);border-radius:8px;background:rgba(255,209,102,.08);color:#e8dcc0;font-size:14px;line-height:1.6}footer{padding:34px 5vw;color:var(--muted);text-align:center;border-top:1px solid var(--line)}footer a{color:var(--brand)}@media(max-width:760px){.content-grid{grid-template-columns:1fr}.site-header{align-items:flex-start;flex-direction:column}.hero{padding-top:34px}.actions{width:100%}button{flex:1 1 130px}}`;
 }
 
 function buildReadme(tool) {
@@ -306,7 +273,8 @@ function buildSiteData() {
   }
   const count = tools.length;
   const ogImageUrl = `${NAV_URL}assets/hub/og/aihh-tool-directory-${count}-tools.svg`;
-  return {
+  const hubFaqs = buildHubFaqs(count);
+  const bundle = {
     hubItemList: tools.map((tool, index) => {
       const hub = buildHubCardFields(tool);
       return {
@@ -354,7 +322,7 @@ function buildSiteData() {
       recommendedTitle: '常用工具',
       recommendedDesc: '开发与 SEO 场景里用得最多的入口。',
       emptyText: '没有匹配项，换个分类或更宽的关键词试试。',
-      footerText: '© 2026 AIHH.ai · 免费在线工具箱 · 条款与隐私见 /legal/',
+      footerText: '© 2026 AIHH.ai · 免费在线工具箱',
       articleSections: [
         {
           title: '为什么大家会收藏 AIHH.ai',
@@ -375,9 +343,15 @@ function buildSiteData() {
           title: '隐私优先',
           content:
             '能在浏览器完成的就不上传。草稿、客户资料、一次性小修不会落到别人服务器上，用起来也更像「即时完成」。'
+        },
+        {
+          title: 'SEO 与收录说明',
+          content:
+            '本站提供完整 HTML 工具目录、sitemap.xml、结构化数据（WebSite、ItemList、FAQ）及每个工具的独立子域页面，便于搜索引擎发现与收录。'
         }
       ]
     },
+    hubFaqs,
     ui: { homepage: { pageSize: 16 }, announcements: [], carousels: [] },
     categories: Array.from(catMap.entries()).map(([catName, subMap]) => ({
       id: catName.replace(/\s+/g, '-').toLowerCase(),
@@ -389,6 +363,8 @@ function buildSiteData() {
       }))
     }))
   };
+  bundle.hubJsonGraph = buildHubJsonGraph(bundle);
+  return bundle;
 }
 
 function buildSeoMap() {
@@ -456,7 +432,10 @@ async function main() {
   const sitemapUrls = [`${NAV_URL}`, ...toolUrls];
   const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapUrls.map((url) => `  <url><loc>${url}</loc><lastmod>${new Date().toISOString().slice(0, 10)}</lastmod><changefreq>weekly</changefreq><priority>${url === NAV_URL ? '1.0' : '0.8'}</priority></url>`).join('\n')}\n</urlset>\n`;
   await write(path.join(ROOT, 'sitemap.xml'), sitemapXml);
-  await write(path.join(ROOT, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${NAV_URL}sitemap.xml\n`);
+  await write(
+    path.join(ROOT, 'robots.txt'),
+    `User-agent: *\nAllow: /\nDisallow: /private/\n\nSitemap: ${NAV_URL}sitemap.xml\n`
+  );
   await write(path.join(ROOT, 'CNAME'), `${DOMAIN}\n`);
   await write(path.join(ROOT, '.nojekyll'), '\n');
   await write(path.join(ROOT, 'main-site', 'index.html'), buildMainSite());
